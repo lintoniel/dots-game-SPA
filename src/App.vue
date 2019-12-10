@@ -4,6 +4,7 @@
       <div class="game">
         <div class="game__panel">
           <div class="game__panel_mode inline_block relative"
+            :class="{ 'game__panel_mode_dropdown_alert': isModeFailed}"
             @click="toggleDropdownVisibility">{{mode}}
               <img src="../src/assets/images/dropdown.png" alt="arrow">
               <div class="game__panel_mode_dropdown absolute"
@@ -18,18 +19,19 @@
                 </div>
               </div>
           </div>
-          <input type="text" class="game__panel_name" placeholder="Enter your name">
-          <button class="game__panel_play">PLAY</button>
+          <input type="text" class="game__panel_name" placeholder="Enter your name"
+            :class="{'game__panel_name_alert': isInputFailed}"
+            v-model="userName"
+          >
+          <button class="game__panel_play"
+              :disabled="isValidateStarted || isGameStarted"
+              @click="startGame()"
+            >
+            PLAY
+          </button>
         </div>
         <div class="game__message"></div>
-        <div class="game__field">
-          <div v-for="i in 5" :key="i">
-            <div class="inline_block game__field_item"
-              v-for="i in 5"
-              :key="i"
-            ></div>
-          </div>
-        </div>
+        <app-game></app-game>
       </div>
       <div class="score">
         <div class="score__table">
@@ -50,21 +52,31 @@
 </template>
 
 <script>
+import axios from 'axios'
+import 'normalize.css'
+import appGame from './components/game'
+
 export default {
   name: 'dots-game',
+  components: {
+    "app-game": appGame
+  },
   data() {
     return {
-      message: "Hello world!",
-      gameSettings: {"easyMode":{"field":5,"delay":2000},"normalMode":{"field":10,"delay":1000},"hardMode":{"field":15,"delay":900}},
-      winnersTable: [
-        {'winner': 'User', 'date' : '11 Octobre 2019'},
-        {'winner': 'User', 'date' : '11 Octobre 2019'},
-        {'winner': 'Computer', 'date' : '11 Octobre 2019'},
-        {'winner': 'User', 'date' : '11 Octobre 2019'}
-      ],
+      gameSettings: {},
+      winnersTable: [],
       mode: "Pick game mode",
+      userName: '',
       dropdownVisibility: false,
-      
+      isValidateStarted: false,
+      isGameStarted: false,
+      isInputFailed: false,
+      isModeFailed: false
+    }
+  },
+  computed: {
+    customeMode() {
+      return this.gameSettings[this.mode];
     }
   },
   methods: {
@@ -73,13 +85,34 @@ export default {
     }, 
     setCustomSettings(key) {
       this.mode = key;
+    
     },
-    getGameSettings() {
-      
+    async getGameSettings() {
+      const response = await axios.get('https://starnavi-frontend-test-task.herokuapp.com/game-settings');
+      this.gameSettings = response.data;
+    },
+    async getWinnersList() {
+      const response = await axios.get('https://starnavi-frontend-test-task.herokuapp.com/winners');
+      this.winnersTable = response.data;
+    },
+    startGame() {
+      this.isValidateStarted = true;
+      this.isInputFailed = false;
+      this.isModeFailed = false;
+      if (!this.userName || this.userName.length > 16) {
+        this.isValidateStarted = false;
+        this.isInputFailed = true;
+        return;
+      } else if (!this.customeMode) {
+        this.isValidateStarted = false;
+        this.isModeFailed = true;
+        return
+      }
     }
   },
   created() {
-    this.getGameSettings()
+    this.getGameSettings();
+    this.getWinnersList();
   }
 }
 </script>
@@ -132,6 +165,10 @@ export default {
   color: #8a9aa0;
 }
 
+.game__panel_mode_dropdown_alert {
+  border: 1px solid rgb(226, 80, 80);
+}
+
 .game__panel_mode_dropdown_item {
   border: 1px solid #bcc5c9;
 }
@@ -157,6 +194,10 @@ export default {
   border-radius: 10px;
   background-color: #f3f3f3;
   color: #a9b4b8;
+}
+
+.game__panel_name_alert {
+  border: 1px solid rgb(226, 80, 80);
 }
 
 .game__panel_name::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
@@ -226,7 +267,7 @@ export default {
   background-color: #cfd8dc;
   color: #9fa8ab;
   margin-bottom: 5px;
-  font-size: 23px;
+  font-size: 20px;
   justify-content: space-between;
 }
 </style>
