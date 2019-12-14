@@ -5,10 +5,11 @@
         <div class="game__panel">
           <div class="game__panel_mode inline_block relative"
             :class="{ 'game__panel_mode_dropdown_alert': isModeFailed}"
+            :disabled="isValidateStarted || isGameStarted"
             @click="toggleDropdownVisibility">{{mode}}
-              <img src="../src/assets/images/dropdown.png" alt="arrow">
+              <img src="../src/assets/images/dropdown.png" alt="arrow" class="absolute">
               <div class="game__panel_mode_dropdown absolute"
-                v-show="dropdownVisibility"
+                v-show="dropdownVisibility && !isGameStarted"
               >
                 <div class="game__panel_mode_dropdown_item"
                   v-for="(val, k) in gameSettings"
@@ -21,6 +22,7 @@
           </div>
           <input type="text" class="game__panel_name" placeholder="Enter your name"
             :class="{'game__panel_name_alert': isInputFailed}"
+            :disabled="isValidateStarted || isGameStarted"
             v-model="userName"
           >
           <button class="game__panel_play"
@@ -31,7 +33,10 @@
           </button>
         </div>
         <div class="game__message"></div>
-        <app-game></app-game>
+        <app-game 
+          v-if="isGameStarted"
+          :custom-settings="customeMode"
+        ></app-game>
       </div>
       <div class="score">
         <div class="score__table">
@@ -96,18 +101,26 @@ export default {
       this.winnersTable = response.data;
     },
     startGame() {
+      if (!this.validate()) return false;
+      this.isGameStarted = true;
+
+    },
+    validate() {
+      // Todo refactor
       this.isValidateStarted = true;
+      this.isGameStarted = false;
       this.isInputFailed = false;
       this.isModeFailed = false;
       if (!this.userName || this.userName.length > 16) {
         this.isValidateStarted = false;
         this.isInputFailed = true;
-        return;
+        return false;
       } else if (!this.customeMode) {
         this.isValidateStarted = false;
         this.isModeFailed = true;
-        return
+        return false
       }
+      return true
     }
   },
   created() {
@@ -124,8 +137,16 @@ export default {
   font-family: sans-serif;
 }
 
+*[disabled] {
+  pointer-events: none;
+}
+
 .flex {
   display: flex;
+}
+
+.grid {
+  display: grid;
 }
 
 .inline_block {
@@ -178,10 +199,10 @@ export default {
 }
 
 .game__panel_mode img{
-  margin-left: 10px;
   height: 15px;
   width: 15px;
-  vertical-align: middle;
+  top: 17px;
+  right: 17px;
 }
 
 .game__panel_name {
@@ -230,19 +251,6 @@ export default {
   line-height: 30px;
   color: #909090;
   text-align: center;
-}
-
-.game__field {
-  text-align: center;
-}
-
-.game__field div {
-  height: 50px; 
-}
-
-.game__field_item {
-  border: 1px solid #f2f2f3;
-  width: 50px;
 }
 
 .score__table {
