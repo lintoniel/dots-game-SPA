@@ -1,9 +1,13 @@
  <template>
-  <div class="game__field grid" :class="gameFieldClass">
-    <div v-for="i in fieldSqured" 
-      :key="i"
-      :id="`game__field_item--${i}`">
+  <div class="game__wrapper">
+    <div class="game__field grid" :class="gameFieldClass">
+      <div v-for="i in fieldSqured" 
+        :key="i"
+        :id="`game__field_item--${i}`">
+      </div>
     </div>
+    <div class="game__score inline_block">User score: {{userScore}} </div>
+    <div class="game__score inline_block">Computer score: {{computerScore}} </div>
   </div>
 </template>
 
@@ -20,7 +24,7 @@ export default {
       }
     }
   },
-  date() {
+  data() {
     return {
       clickedItems: null,
       userScore: 0,
@@ -50,11 +54,11 @@ export default {
       this.gameStep();
     },
     gerWinner() {
-
+      return this.userScore > this.computerScore;
     },
     gameStep() {
       let oldLength = this.clickedItems.size;
-      let randomNumder = Math.floor(Math.random() * (this.fieldSqured - 1)) + 1;
+      let randomNumder = Math.floor(Math.random() * this.fieldSqured) + 1;
       this.clickedItems.add(randomNumder);
       let newLength = this.clickedItems.size;
 
@@ -69,6 +73,7 @@ export default {
       elem.classList.add('item_red');
       let clicked = false;
 
+
       elem.addEventListener('click', ()=>{
         clicked = true;
         elem.classList.add('item_green');
@@ -76,12 +81,13 @@ export default {
       });
 
       setTimeout(()=>{
+         
           if (!clicked) {
             elem.classList.add('item_blue');
             this.computerScore++;
           }
 
-          if (this.computerScore >= this.fieldSqured/2 || this.userScore >= this.fieldSqured/2) {
+          if (this.computerScore > this.fieldSqured/2 || this.userScore > this.fieldSqured/2) {
               this.$emit('game-over', this.gerWinner())
           } else {
             this.gameStep();
@@ -97,8 +103,13 @@ export default {
 </script>
 
 <style scoped>
+.game__wrapper {
+  width: 100%;
+}
+
 .game__field {
   margin: 0 auto;
+  margin-bottom: 20px;
 }
 
 .game__field_easy {
@@ -126,12 +137,17 @@ export default {
 }
 
 .item_green {
-  background-color: green;
+  background-color: #00e871;
   pointer-events: none
 }
 
 .item_blue {
-  background-color: blue;
+  background-color: #42d8e8;
   pointer-events: none
+}
+
+.game__score {
+  width: 49%;
+  text-align: center;
 }
 </style>

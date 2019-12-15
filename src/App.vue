@@ -29,12 +29,15 @@
               :disabled="isValidateStarted || isGameStarted"
               @click="startGame()"
             >
-            PLAY
+            {{playButtonText}}
           </button>
         </div>
-        <div class="game__message"></div>
+        <div class="game__message">
+          <template v-if="winnerData.winner">Winner is {{winnerData.winner}}</template>
+        </div>
         <app-game 
-          v-if="isGameStarted"
+          v-if="isGameStarted || isGameOver"
+          @game-over="gameOver"
           :custom-settings="customeMode"
         ></app-game>
       </div>
@@ -76,7 +79,10 @@ export default {
       isValidateStarted: false,
       isGameStarted: false,
       isInputFailed: false,
-      isModeFailed: false
+      isModeFailed: false,
+      isGameOver: false,
+      winnerData: {},
+      playButtonText: 'PLAY'
     }
   },
   computed: {
@@ -103,14 +109,12 @@ export default {
     startGame() {
       if (!this.validate()) return false;
       this.isGameStarted = true;
-
+      this.isValidateStarted = false;
+      this.playButtonText = 'PLAYING...'
     },
     validate() {
-      // Todo refactor
-      this.isValidateStarted = true;
-      this.isGameStarted = false;
-      this.isInputFailed = false;
-      this.isModeFailed = false;
+      this.resetMainVar();
+
       if (!this.userName || this.userName.length > 16) {
         this.isValidateStarted = false;
         this.isInputFailed = true;
@@ -121,6 +125,29 @@ export default {
         return false
       }
       return true
+    },
+    resetMainVar() {
+      this.isValidateStarted = true;
+      this.isGameStarted = false;
+      this.isInputFailed = false;
+      this.isModeFailed = false;
+      this.isGameOver = false;
+      this.winnerData = {};
+    },
+    gameOver(winner) {
+      this.isGameOver = true;
+      this.isGameStarted = false;
+      this.playButtonText = 'PLAY AGAIN'
+      const winnerName = winner ? this.userName : 'Computer'
+      this.winnerData = {
+        winner: winnerName,
+        date: new Date().getTime()
+      }
+      this.updateTable();
+    },
+    async updateTable() {
+      const response = await axios.post('https://starnavi-frontend-test-task.herokuapp.com/winners', this.winnerData);
+      this.winnersTable = response.data;
     }
   },
   created() {
@@ -236,7 +263,7 @@ export default {
 
 .game__panel_play {
   margin-left: 20px;
-  width: 100px;
+  padding: 0 30px;
   height: 50px;
   background-color: #7b8d93;
   color: #f8f9f9;
