@@ -137,6 +137,7 @@ export default {
     gameOver(winner) {
       this.isGameOver = true;
       this.isGameStarted = false;
+
       this.playButtonText = 'PLAY AGAIN'
       const winnerName = winner ? this.userName : 'Computer'
       this.winnerData = {
@@ -144,6 +145,8 @@ export default {
         date: this.currentTime()
       }
       this.updateTable();
+      this.mode = "Pick game mode";
+      this.userName = '';
     },
     currentTime() {
       return new Date(new Date().getTime());
