@@ -36,7 +36,7 @@
           <template v-if="winnerData.winner">Winner is {{winnerData.winner}}</template>
         </div>
         <app-game 
-          v-if="isGameStarted || isGameOver"
+          v-if="isGameStarted"
           @game-over="gameOver"
           :custom-settings="customeMode"
         ></app-game>
@@ -141,9 +141,12 @@ export default {
       const winnerName = winner ? this.userName : 'Computer'
       this.winnerData = {
         winner: winnerName,
-        date: new Date().getTime()
+        date: this.currentTime()
       }
       this.updateTable();
+    },
+    currentTime() {
+      return new Date(new Date().getTime());
     },
     async updateTable() {
       const response = await axios.post('https://starnavi-frontend-test-task.herokuapp.com/winners', this.winnerData);
